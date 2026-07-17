@@ -234,8 +234,12 @@ export const PLATFORM_HEALTH = gql`
 `;
 
 export const PLATFORM_SUPPORT_TICKETS = gql`
-  query PlatformSupportTickets($status: TicketStatus, $limit: Int) {
-    platformSupportTickets(status: $status, limit: $limit) {
+  query PlatformSupportTickets(
+    $status: TicketStatus
+    $priority: TicketPriority
+    $limit: Int
+  ) {
+    platformSupportTickets(status: $status, priority: $priority, limit: $limit) {
       total
       items {
         id
@@ -244,7 +248,13 @@ export const PLATFORM_SUPPORT_TICKETS = gql`
         subject
         priority
         status
+        source
         updatedAt
+        reporterSnapshot {
+          name
+          email
+          churchName
+        }
       }
     }
   }
@@ -260,13 +270,35 @@ export const PLATFORM_SUPPORT_TICKET = gql`
       description
       priority
       status
+      source
+      createdByUserId
       createdAt
       updatedAt
+      reporterSnapshot {
+        name
+        email
+        role
+        churchId
+        churchName
+        plan
+        churchStatus
+        planInterest
+        userAgent
+        pageUrl
+        submittedAt
+      }
+      attachments {
+        name
+        mimeType
+        dataUrl
+      }
       notes {
         id
         body
         isInternal
         authorEmail
+        authorName
+        authorRole
         createdAt
       }
     }
@@ -316,6 +348,39 @@ export const ADD_TICKET_NOTE = gql`
       isInternal: $isInternal
     ) {
       id
+      notes {
+        id
+        body
+        isInternal
+        authorEmail
+        authorName
+        authorRole
+        createdAt
+      }
+    }
+  }
+`;
+
+export const SUPPORT_NOTE_ADDED_SUBSCRIPTION = gql`
+  subscription SupportNoteAdded($ticketId: ID!) {
+    supportNoteAdded(ticketId: $ticketId) {
+      id
+      body
+      isInternal
+      authorEmail
+      authorName
+      authorRole
+      createdAt
+    }
+  }
+`;
+
+export const SUPPORT_TICKET_UPDATED_SUBSCRIPTION = gql`
+  subscription SupportTicketUpdated($ticketId: ID!) {
+    supportTicketUpdated(ticketId: $ticketId) {
+      id
+      status
+      updatedAt
     }
   }
 `;

@@ -10,6 +10,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableContainer,
   TableHead,
   TableRow,
   Button,
@@ -27,6 +28,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 import {
   PLATFORM_TENANT,
+  PLATFORM_PLANS,
   UPDATE_TENANT_PLAN,
   PAUSE_TENANT,
   RESUME_TENANT,
@@ -36,6 +38,53 @@ import {
   DELETE_FEATURE_FLAG,
   START_IMPERSONATION,
 } from "../graphql/operations.js";
+import {
+  FEATURE_FLAG_VALUES,
+  PLATFORM_FEATURE_FLAG_CATALOG,
+  flagLabel,
+} from "../constants/featureFlagsCatalog.js";
+
+function computeHealth(tenant, planLimits) {
+  let score = 100;
+  const notes = [];
+
+  if (tenant.status === "PAUSED") {
+    score -= 35;
+    notes.push("Tenant pausado");
+  } else if (tenant.status === "SUSPENDED") {
+    score -= 50;
+    notes.push("Tenant suspendido");
+  }
+
+  const sub = tenant.subscription?.status;
+  if (sub === "PAST_DUE") {
+    score -= 30;
+    notes.push("Suscripción PAST_DUE");
+  } else if (sub === "CANCELED") {
+    score -= 25;
+    notes.push("Suscripción cancelada");
+  } else if (sub === "TRIALING") {
+    notes.push("En trial");
+  }
+
+  const maxUsers = planLimits?.maxUsers;
+  const maxLayouts = planLimits?.maxLayouts;
+  if (maxUsers && tenant.userCount >= maxUsers) {
+    score -= 15;
+    notes.push(`Usuarios al límite (${tenant.userCount}/${maxUsers})`);
+  } else if (maxUsers && tenant.userCount / maxUsers > 0.85) {
+    score -= 8;
+    notes.push(`Usuarios altos (${tenant.userCount}/${maxUsers})`);
+  }
+  if (maxLayouts && tenant.layoutCount >= maxLayouts) {
+    score -= 10;
+    notes.push(`Layouts al límite (${tenant.layoutCount}/${maxLayouts})`);
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  const tone = score >= 80 ? "success" : score >= 55 ? "warning" : "error";
+  return { score, notes, tone };
+}
 
 export default function TenantDetail() {
   const { id } = useParams();
@@ -47,9 +96,10 @@ export default function TenantDetail() {
   const [flagKey, setFlagKey] = useState("");
   const [flagValue, setFlagValue] = useState("true");
 
-  const { data, loading, refetch } = useQuery(PLATFORM_TENANT, {
+  const { data, loading, error, refetch } = useQuery(PLATFORM_TENANT, {
     variables: { id },
   });
+  const { data: plansData } = useQuery(PLATFORM_PLANS);
   const { data: flagsData, refetch: refetchFlags } = useQuery(
     PLATFORM_FEATURE_FLAGS,
     { variables: { churchId: id } },
@@ -73,9 +123,22 @@ export default function TenantDetail() {
     );
   }
 
+  if (error) {
+    return (
+      <Alert severity="error" sx={{ mt: 2 }}>
+        No se pudo cargar el cliente: {error.message}
+      </Alert>
+    );
+  }
+
   if (!t) {
     return <Alert severity="error">Cliente no encontrado</Alert>;
   }
+
+  const planLimits = (plansData?.platformPlanCatalog ?? []).find(
+    (p) => p.planCode === t.plan || p.name?.toUpperCase()?.includes(t.plan),
+  );
+  const health = computeHealth(t, planLimits);
 
   const handlePlanSave = async () => {
     await updatePlan({
@@ -130,7 +193,7 @@ export default function TenantDetail() {
             Cambiar plan
           </Button>
           <Button variant="outlined" onClick={() => setTrialDialog(true)}>
-            Extender trial
+            Dar plazo de gracia
           </Button>
           {t.status === "ACTIVE" ? (
             <Button
@@ -169,19 +232,57 @@ export default function TenantDetail() {
       </Stack>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Paper variant="outlined" sx={{ p: 2, height: "100%" }}>
+            <Typography variant="overline" color="text.secondary">
+              Health score
+            </Typography>
+            <Typography
+              variant="h3"
+              fontWeight={800}
+              color={`${health.tone}.main`}
+            >
+              {health.score}
+            </Typography>
+            {health.notes.length ? (
+              <Box component="ul" sx={{ m: 0, pl: 2, mt: 1 }}>
+                {health.notes.map((n) => (
+                  <Typography
+                    key={n}
+                    component="li"
+                    variant="caption"
+                    color="text.secondary"
+                  >
+                    {n}
+                  </Typography>
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="caption" color="text.secondary">
+                Sin alertas
+              </Typography>
+            )}
+          </Paper>
+        </Grid>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="overline" color="text.secondary">
               Uso
             </Typography>
             <Typography>Usuarios: {t.userCount}</Typography>
             <Typography>Layouts: {t.layoutCount}</Typography>
+            {planLimits && (
+              <Typography variant="caption" color="text.secondary" display="block">
+                Límites: {planLimits.maxUsers ?? "∞"} users /{" "}
+                {planLimits.maxLayouts ?? "∞"} layouts
+              </Typography>
+            )}
             <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
               Alta: {new Date(t.createdAt).toLocaleString()}
             </Typography>
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="overline" color="text.secondary">
               Suscripción
@@ -201,7 +302,7 @@ export default function TenantDetail() {
             )}
           </Paper>
         </Grid>
-        <Grid size={{ xs: 12, md: 4 }}>
+        <Grid size={{ xs: 12, md: 3 }}>
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Typography variant="overline" color="text.secondary">
               ID
@@ -217,15 +318,16 @@ export default function TenantDetail() {
         <Typography variant="h6" gutterBottom>
           Usuarios
         </Typography>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell>Nombre</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Rol</TableCell>
-              <TableCell align="right">Acciones</TableCell>
-            </TableRow>
-          </TableHead>
+        <TableContainer sx={{ overflowX: "auto" }}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell>Nombre</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Rol</TableCell>
+                <TableCell align="right">Acciones</TableCell>
+              </TableRow>
+            </TableHead>
           <TableBody>
             {(t.users ?? []).map((u) => (
               <TableRow key={u.id}>
@@ -258,26 +360,56 @@ export default function TenantDetail() {
             ))}
           </TableBody>
         </Table>
+        </TableContainer>
       </Paper>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="h6" gutterBottom>
           Feature flags
         </Typography>
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap">
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Activa o desactiva módulos para esta iglesia. Elige la función en el
+          selector (no es texto libre).
+        </Typography>
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }} flexWrap="wrap" useFlexGap>
           <TextField
+            select
             size="small"
-            label="Clave"
-            placeholder="ej. layout_builder_v2"
+            label="Función"
             value={flagKey}
-            onChange={(e) => setFlagKey(e.target.value)}
-          />
+            onChange={(e) => {
+              const next = e.target.value;
+              setFlagKey(next);
+              const meta = PLATFORM_FEATURE_FLAG_CATALOG.find(
+                (f) => f.key === next,
+              );
+              if (meta?.defaultValue) setFlagValue(meta.defaultValue);
+            }}
+            sx={{ minWidth: 260 }}
+          >
+            <MenuItem value="">
+              <em>Seleccionar…</em>
+            </MenuItem>
+            {PLATFORM_FEATURE_FLAG_CATALOG.map((f) => (
+              <MenuItem key={f.key} value={f.key}>
+                {f.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <TextField
+            select
             size="small"
-            label="Valor"
+            label="Estado"
             value={flagValue}
             onChange={(e) => setFlagValue(e.target.value)}
-          />
+            sx={{ minWidth: 180 }}
+          >
+            {FEATURE_FLAG_VALUES.map((v) => (
+              <MenuItem key={v.value} value={v.value}>
+                {v.label}
+              </MenuItem>
+            ))}
+          </TextField>
           <Button
             variant="contained"
             size="small"
@@ -294,25 +426,43 @@ export default function TenantDetail() {
                 },
               });
               setFlagKey("");
+              setFlagValue("true");
               refetchFlags();
             }}
           >
             Guardar flag
           </Button>
         </Stack>
+        {flagKey && (
+          <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 1.5 }}>
+            {PLATFORM_FEATURE_FLAG_CATALOG.find((f) => f.key === flagKey)?.description}
+          </Typography>
+        )}
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell>Función</TableCell>
               <TableCell>Clave</TableCell>
-              <TableCell>Valor</TableCell>
+              <TableCell>Estado</TableCell>
               <TableCell />
             </TableRow>
           </TableHead>
           <TableBody>
             {(flagsData?.platformFeatureFlags ?? []).map((f) => (
               <TableRow key={f.id}>
-                <TableCell>{f.key}</TableCell>
-                <TableCell>{f.value}</TableCell>
+                <TableCell>{flagLabel(f.key)}</TableCell>
+                <TableCell>
+                  <Typography variant="caption" color="text.secondary">
+                    {f.key}
+                  </Typography>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    size="small"
+                    label={f.value === "true" ? "Activado" : f.value === "false" ? "Desactivado" : f.value}
+                    color={f.value === "true" ? "success" : "default"}
+                  />
+                </TableCell>
                 <TableCell align="right">
                   <Button
                     size="small"
@@ -331,6 +481,15 @@ export default function TenantDetail() {
                 </TableCell>
               </TableRow>
             ))}
+            {(flagsData?.platformFeatureFlags ?? []).length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4}>
+                  <Typography color="text.secondary" sx={{ py: 2, textAlign: "center" }}>
+                    Sin flags configuradas para este cliente.
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </Paper>
@@ -406,8 +565,12 @@ export default function TenantDetail() {
         onClose={() => setTrialDialog(false)}
         fullWidth
       >
-        <DialogTitle>Extender periodo de prueba</DialogTitle>
+        <DialogTitle>Dar plazo de gracia</DialogTitle>
         <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+            Extiende el acceso temporal sin pago (trial). Reactiva la iglesia si
+            estaba suspendida.
+          </Typography>
           <TextField
             type="number"
             fullWidth
@@ -431,7 +594,7 @@ export default function TenantDetail() {
             disabled={!reason || extending}
             onClick={handleTrial}
           >
-            Aplicar
+            Aplicar plazo
           </Button>
         </DialogActions>
       </Dialog>

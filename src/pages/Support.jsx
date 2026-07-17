@@ -36,15 +36,28 @@ const priorityColor = {
   LOW: "default",
 };
 
+const sourceLabel = {
+  TENANT_APP: "App",
+  LANDING: "Landing",
+  PLATFORM: "Interno",
+};
+
 export default function Support() {
   const [open, setOpen] = useState(false);
   const [churchId, setChurchId] = useState("");
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("MEDIUM");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
 
   const { data, loading, refetch } = useQuery(PLATFORM_SUPPORT_TICKETS, {
-    variables: { limit: 50 },
+    variables: {
+      limit: 50,
+      status: statusFilter || undefined,
+      priority: priorityFilter || undefined,
+    },
+    fetchPolicy: "cache-and-network",
   });
   const { data: tenantsData } = useQuery(PLATFORM_TENANTS, {
     variables: { limit: 100 },
@@ -68,22 +81,55 @@ export default function Support() {
         justifyContent="space-between"
         alignItems="center"
         sx={{ mb: 2 }}
+        flexWrap="wrap"
+        gap={2}
       >
         <Box>
           <Typography variant="h4" fontWeight={700}>
             Soporte
           </Typography>
           <Typography color="text.secondary">
-            Tickets internos por cliente
+            Tickets de clientes (app, landing e internos)
           </Typography>
         </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setOpen(true)}
-        >
-          Nuevo ticket
-        </Button>
+        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
+          <TextField
+            select
+            size="small"
+            label="Estado"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            sx={{ minWidth: 180 }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            <MenuItem value="OPEN">OPEN</MenuItem>
+            <MenuItem value="IN_PROGRESS">IN_PROGRESS</MenuItem>
+            <MenuItem value="WAITING_CUSTOMER">WAITING_CUSTOMER</MenuItem>
+            <MenuItem value="RESOLVED">RESOLVED</MenuItem>
+            <MenuItem value="CLOSED">CLOSED</MenuItem>
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Prioridad"
+            value={priorityFilter}
+            onChange={(e) => setPriorityFilter(e.target.value)}
+            sx={{ minWidth: 150 }}
+          >
+            <MenuItem value="">Todas</MenuItem>
+            <MenuItem value="URGENT">URGENT</MenuItem>
+            <MenuItem value="HIGH">HIGH</MenuItem>
+            <MenuItem value="MEDIUM">MEDIUM</MenuItem>
+            <MenuItem value="LOW">LOW</MenuItem>
+          </TextField>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpen(true)}
+          >
+            Nuevo ticket
+          </Button>
+        </Stack>
       </Stack>
 
       <Paper variant="outlined">
@@ -97,6 +143,7 @@ export default function Support() {
               <TableRow>
                 <TableCell>Cliente</TableCell>
                 <TableCell>Asunto</TableCell>
+                <TableCell>Origen</TableCell>
                 <TableCell>Prioridad</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell>Actualizado</TableCell>
@@ -106,8 +153,20 @@ export default function Support() {
             <TableBody>
               {(data?.platformSupportTickets?.items ?? []).map((t) => (
                 <TableRow key={t.id} hover>
-                  <TableCell>{t.churchName}</TableCell>
+                  <TableCell>
+                    {t.churchName ||
+                      t.reporterSnapshot?.churchName ||
+                      t.reporterSnapshot?.email ||
+                      "—"}
+                  </TableCell>
                   <TableCell>{t.subject}</TableCell>
+                  <TableCell>
+                    <Chip
+                      label={sourceLabel[t.source] || t.source || "—"}
+                      size="small"
+                      variant="outlined"
+                    />
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={t.priority}
