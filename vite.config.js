@@ -23,6 +23,16 @@ export default defineConfig({
     port: 5175,
     open: true,
   },
+  preview: {
+    host: "0.0.0.0",
+    port: 5175,
+    // Custom domain + Railway default URLs
+    allowedHosts: [
+      "admin.kahalzerem.com",
+      ".up.railway.app",
+      "localhost",
+    ],
+  },
   build: {
     outDir: "dist",
   },
