@@ -22,6 +22,7 @@ const STATIC_LINKS = [
   { label: "Pagos", path: "/payments", group: "Navegación" },
   { label: "Planes", path: "/plans", group: "Navegación" },
   { label: "Soporte", path: "/support", group: "Navegación" },
+  { label: "Infra / Costos", path: "/infra", group: "Navegación" },
   { label: "Sistema / Health", path: "/system", group: "Navegación" },
   { label: "Auditoría", path: "/audit", group: "Navegación" },
 ];

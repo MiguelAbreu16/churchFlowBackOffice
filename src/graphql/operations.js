@@ -233,6 +233,58 @@ export const PLATFORM_HEALTH = gql`
   }
 `;
 
+export const PLATFORM_INFRA_USAGE = gql`
+  query PlatformInfraUsage($from: String, $to: String) {
+    platformInfraUsage(from: $from, to: $to) {
+      from
+      to
+      grandTotalUsd
+      disclaimer
+      processMemoryMb
+      railway {
+        configured
+        message
+        memoryGb
+        cpu
+        storageGb
+        networkGb
+        estimatedCostUsd
+        source
+        services {
+          name
+          costUsd
+        }
+      }
+      vercel {
+        configured
+        message
+        estimatedCostUsd
+        source
+        services {
+          name
+          costUsd
+        }
+      }
+      tenants {
+        churchId
+        name
+        plan
+        status
+        userCount
+        layoutCount
+        railwayWeight
+        vercelWeight
+        railwayUsd
+        vercelUsd
+        totalUsd
+        railwaySharePct
+        vercelSharePct
+        sharePct
+      }
+    }
+  }
+`;
+
 export const PLATFORM_SUPPORT_TICKETS = gql`
   query PlatformSupportTickets(
     $status: TicketStatus

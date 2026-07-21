@@ -23,6 +23,7 @@ import CardMembershipIcon from "@mui/icons-material/CardMembership";
 import HistoryIcon from "@mui/icons-material/History";
 import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
+import CloudIcon from "@mui/icons-material/Cloud";
 import LogoutIcon from "@mui/icons-material/Logout";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -36,6 +37,7 @@ const navItems = [
   { to: "/payments", label: "Pagos", icon: <PaymentsIcon /> },
   { to: "/plans", label: "Planes", icon: <CardMembershipIcon /> },
   { to: "/support", label: "Soporte", icon: <SupportAgentIcon /> },
+  { to: "/infra", label: "Infra / Costos", icon: <CloudIcon /> },
   { to: "/system", label: "Sistema", icon: <MonitorHeartIcon /> },
   { to: "/audit", label: "Auditoría", icon: <HistoryIcon /> },
 ];

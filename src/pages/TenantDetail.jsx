@@ -37,6 +37,7 @@ import {
   SET_FEATURE_FLAG,
   DELETE_FEATURE_FLAG,
   START_IMPERSONATION,
+  PLATFORM_INFRA_USAGE,
 } from "../graphql/operations.js";
 import {
   FEATURE_FLAG_VALUES,
@@ -103,6 +104,12 @@ export default function TenantDetail() {
   const { data: flagsData, refetch: refetchFlags } = useQuery(
     PLATFORM_FEATURE_FLAGS,
     { variables: { churchId: id } },
+  );
+  const { data: infraData } = useQuery(PLATFORM_INFRA_USAGE, {
+    fetchPolicy: "cache-first",
+  });
+  const tenantInfra = (infraData?.platformInfraUsage?.tenants || []).find(
+    (row) => row.churchId === id,
   );
 
   const [updatePlan, { loading: savingPlan }] = useMutation(UPDATE_TENANT_PLAN);
@@ -313,6 +320,40 @@ export default function TenantDetail() {
           </Paper>
         </Grid>
       </Grid>
+
+      <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          justifyContent="space-between"
+          alignItems={{ sm: "center" }}
+          spacing={1}
+        >
+          <Box>
+            <Typography variant="overline" color="text.secondary">
+              Costo infra estimado
+            </Typography>
+            {tenantInfra ? (
+              <>
+                <Typography variant="h5" fontWeight={700}>
+                  ${Number(tenantInfra.totalUsd).toFixed(2)}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Railway ${Number(tenantInfra.railwayUsd).toFixed(2)} · Vercel $
+                  {Number(tenantInfra.vercelUsd).toFixed(2)} · Share{" "}
+                  {Number(tenantInfra.sharePct).toFixed(1)}% (prorrateo)
+                </Typography>
+              </>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                Sin prorrateo para este cliente (inactivo o APIs no configuradas).
+              </Typography>
+            )}
+          </Box>
+          <Button component={RouterLink} to="/infra" variant="outlined" size="small">
+            Ver panel Infra / Costos
+          </Button>
+        </Stack>
+      </Paper>
 
       <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
         <Typography variant="h6" gutterBottom>

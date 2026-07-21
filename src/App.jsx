@@ -12,6 +12,7 @@ import AuditLog from "./pages/AuditLog.jsx";
 import Support from "./pages/Support.jsx";
 import SupportDetail from "./pages/SupportDetail.jsx";
 import System from "./pages/System.jsx";
+import InfraUsage from "./pages/InfraUsage.jsx";
 
 function RequireAuth({ children }) {
   const token = localStorage.getItem("platform_token");
@@ -38,6 +39,7 @@ export default function App() {
           <Route path="plans" element={<Plans />} />
           <Route path="support" element={<Support />} />
           <Route path="support/:id" element={<SupportDetail />} />
+          <Route path="infra" element={<InfraUsage />} />
           <Route path="system" element={<System />} />
           <Route path="audit" element={<AuditLog />} />
         </Route>
