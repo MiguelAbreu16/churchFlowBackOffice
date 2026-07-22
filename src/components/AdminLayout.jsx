@@ -132,25 +132,16 @@ export default function AdminLayout() {
             }}
           >
             <Box
+              component="img"
+              src="/logo-icon.png"
+              alt=""
               sx={{
                 width: 36,
                 height: 36,
-                borderRadius: 1.5,
-                bgcolor: "#0b0f1a",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                overflow: "hidden",
+                objectFit: "contain",
                 flexShrink: 0,
               }}
-            >
-              <Box
-                component="img"
-                src="/logo-icon.png"
-                alt=""
-                sx={{ width: 32, height: 32, objectFit: "contain" }}
-              />
-            </Box>
+            />
             <Typography
               variant="h6"
               sx={{

@@ -44,25 +44,11 @@ export default function Login() {
       <Paper sx={{ p: 4, width: "100%", maxWidth: 420 }} elevation={3}>
         <Stack spacing={2} alignItems="center" sx={{ mb: 3 }}>
           <Box
-            sx={{
-              width: 64,
-              height: 64,
-              borderRadius: 2.5,
-              bgcolor: "#0b0f1a",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              overflow: "hidden",
-              boxShadow: "0 8px 20px -6px rgba(15,23,42,0.35)",
-            }}
-          >
-            <Box
-              component="img"
-              src="/logo-icon.png"
-              alt="Kahal Zerem"
-              sx={{ width: 56, height: 56, objectFit: "contain" }}
-            />
-          </Box>
+            component="img"
+            src="/logo-icon.png"
+            alt="Kahal Zerem"
+            sx={{ width: 64, height: 64, objectFit: "contain" }}
+          />
           <Typography variant="h5" fontWeight={700}>
             Kahal Zerem Admin
           </Typography>
