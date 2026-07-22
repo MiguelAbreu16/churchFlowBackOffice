@@ -122,17 +122,49 @@ export default function AdminLayout() {
               <MenuIcon />
             </IconButton>
           )}
-          <Typography
-            variant="h6"
+          <Box
             sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
               flexGrow: 1,
-              fontWeight: 800,
-              fontFamily: '"Outfit", "Inter", sans-serif',
-              letterSpacing: "-0.03em",
+              minWidth: 0,
             }}
           >
-            Kahal Zerem Admin
-          </Typography>
+            <Box
+              sx={{
+                width: 36,
+                height: 36,
+                borderRadius: 1.5,
+                bgcolor: "#0b0f1a",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
+              }}
+            >
+              <Box
+                component="img"
+                src="/logo-icon.png"
+                alt=""
+                sx={{ width: 32, height: 32, objectFit: "contain" }}
+              />
+            </Box>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 800,
+                fontFamily: '"Outfit", "Inter", sans-serif',
+                letterSpacing: "-0.03em",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Kahal Zerem Admin
+            </Typography>
+          </Box>
           <IconButton
             color="inherit"
             onClick={() => setPaletteOpen(true)}

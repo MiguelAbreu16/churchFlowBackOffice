@@ -49,7 +49,7 @@ export default function Dashboard() {
         Command Center
       </Typography>
       <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Vista operativa de la plataforma ChurchOps
+        Vista operativa de la plataforma Kahal Zerem
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>

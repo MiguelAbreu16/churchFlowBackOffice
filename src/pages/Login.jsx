@@ -10,7 +10,6 @@ import {
   Alert,
   Stack,
 } from "@mui/material";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 import { PLATFORM_LOGIN } from "../graphql/operations.js";
 
@@ -44,9 +43,28 @@ export default function Login() {
     >
       <Paper sx={{ p: 4, width: "100%", maxWidth: 420 }} elevation={3}>
         <Stack spacing={2} alignItems="center" sx={{ mb: 3 }}>
-          <AdminPanelSettingsIcon color="primary" sx={{ fontSize: 48 }} />
+          <Box
+            sx={{
+              width: 64,
+              height: 64,
+              borderRadius: 2.5,
+              bgcolor: "#0b0f1a",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              overflow: "hidden",
+              boxShadow: "0 8px 20px -6px rgba(15,23,42,0.35)",
+            }}
+          >
+            <Box
+              component="img"
+              src="/logo-icon.png"
+              alt="Kahal Zerem"
+              sx={{ width: 56, height: 56, objectFit: "contain" }}
+            />
+          </Box>
           <Typography variant="h5" fontWeight={700}>
-            ChurchOps Admin
+            Kahal Zerem Admin
           </Typography>
           <Typography variant="body2" color="text.secondary" textAlign="center">
             Acceso restringido al equipo de plataforma
